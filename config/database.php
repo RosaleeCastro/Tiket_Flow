@@ -1,4 +1,5 @@
 <?php
+//trabajo con xammp, sql en phpadmin 
 $host ="localhost";
 $dbname ="ticketpro_db";
 $user = "root";

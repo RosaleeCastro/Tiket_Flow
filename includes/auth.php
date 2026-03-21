@@ -34,5 +34,19 @@ function requiereLogin(): void
   }
 }
 
+/**
+ * Devuelve el rol del usaurio actual 
+ */
+function currentUserRol(): ?string
+{
+  return $_SESSION['USUARIO']['rol'] ?? null;
+}
+/**
+ * Comprueba si el usaurio actual tiene un rol concreto
+ */
+function hasRole(string $rol):bool
+{
+  return isLoggedIn() && currentUser() === $rol;
+}
 
 ?>

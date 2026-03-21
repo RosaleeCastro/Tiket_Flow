@@ -53,6 +53,12 @@ $error = $_GET['error'] ?? '';
             </div>
         <?php endif; ?>
 
+        <?php if ($error === 'inactivo'): ?>
+           <div class="error-box">
+                 Tu usuario está inactivo. Contacta con el administrador.
+         </div>
+        <?php endif; ?>
+
         <!--
             Formulario de inicio de sesión.
             Los datos se enviarán por POST a login_process.php

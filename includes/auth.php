@@ -49,4 +49,28 @@ function hasRole(string $rol):bool
   return isLoggedIn() && currentUser() === $rol;
 }
 
+/**
+ * Restringe el acceso a un solo rol
+ */
+
+function requireRole(string $rol): void
+{
+  requiereLogin();
+  if(!hasRole($rol)){
+    echo "Acceso denegado. No tienes permisis para entrar";
+    exit;
+  }
+}
+/**
+ * Restringe acceso a varios roles permitidos 
+ */
+function requiereAnyRole(array $roles): void
+{
+  requiereLogin();
+  $rolActual = currentUserRol();
+  if(!in_array($rolActual, $roles, true)){
+    echo "Acceso denegado. No tienes permisos ´para entrar.";
+    exit;
+  }
+}
 ?>

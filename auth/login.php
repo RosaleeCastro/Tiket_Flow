@@ -24,9 +24,9 @@ $error = $_GET['error'] ?? '';
     <title>Login | Ticket Flow</title>
 
     <!-- Enlace a tu archivo CSS externo -->
-    <link rel="stylesheet" href="../assets/css/style.css"
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-<body>
+<body class="login-page">
 
     <!-- Contenedor principal del formulario de login -->
     <div class="login-container">

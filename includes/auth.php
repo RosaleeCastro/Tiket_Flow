@@ -26,7 +26,7 @@ function currentUser(): ?array
  * 
  */
 
-function requiereLogin(): void
+function requireLogin(): void
 {
   if(!isLoggedIn()){
     header('Location: /Ticket_Flow/auth/login.php');
@@ -55,7 +55,7 @@ function hasRole(string $rol):bool
 
 function requireRole(string $rol): void
 {
-  requiereLogin();
+  requireLogin();
   if(!hasRole($rol)){
     echo "Acceso denegado. No tienes permisis para entrar";
     exit;
@@ -66,7 +66,7 @@ function requireRole(string $rol): void
  */
 function requiereAnyRole(array $roles): void
 {
-  requiereLogin();
+  requireLogin();
   $rolActual = currentUserRol();
   if(!in_array($rolActual, $roles, true)){
     echo "Acceso denegado. No tienes permisos ´para entrar.";

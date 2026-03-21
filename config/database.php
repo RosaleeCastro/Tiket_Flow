@@ -1,20 +1,14 @@
 <?php
-//trabajo con xammp, sql en phpadmin 
-$host ="localhost";
-$dbname ="ticketpro_db";
+$host = "localhost";
 $user = "root";
-$pass = "";
+$password = "";
+$database = "ticketpro_db";
+$port = 3307;
 
-  //Crear la conexión con MySQL usando mysqli 
-  
-  $conexion = new mysqli($host, $user, $pass, $dbname);
+$conn = new mysqli($host, $user, $password, $database, $port);
 
-  //verificar si hubo error de conexión
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
 
-  if($conexion->connect_error){
-    die("Error de conexion : ". $conexion->connect_error);
-  }
-
-  // Establecer el juego de caracteres a utf8mb4
-  $conexion->set_charset("utf8mb4");
 ?>

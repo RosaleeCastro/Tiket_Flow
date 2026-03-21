@@ -7,7 +7,8 @@ if(session_start()=== PHP_SESSION_NONE){
 * Comprobar si hay un usuario autenticado en sessión
 */
 
-function isLoggedIn(): bool {
+function isLoggedIn(): bool 
+{
   return isset($_SESSION['usuario']) &&  !empty($_SESSION['usuario']);
 }
 
@@ -15,7 +16,23 @@ function isLoggedIn(): bool {
  * Devuelve los datos del usuario actual o null si no hay session
  */
 
+function currentUser(): ?array
+{
+  return $_SESSION['usuario'] ?? null;
+}
 
+/**
+ * Fuerxa el acceso solo a usuarios autenticados
+ * 
+ */
+
+function requiereLogin(): void
+{
+  if(!isLoggedIn()){
+    header('Location: /Ticket_Flow/auth/login.php');
+    exit;
+  }
+}
 
 
 ?>

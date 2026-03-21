@@ -73,4 +73,26 @@ function requiereAnyRole(array $roles): void
     exit;
   }
 }
+/**
+ * Comprueba si el usaurio es administrador 
+ */
+function isAdmin(): bool
+{
+  return hasRole('admin');
+}
+/**
+ * Comprueba si el usuario es técnico
+ */
+function isTecnico(): bool
+{
+    return hasRole('tecnico');
+}
+
+/**
+ * Comprueba si el usuario es cliente
+ */
+function isCliente(): bool
+{
+    return hasRole('cliente');
+}
 ?>

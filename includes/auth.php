@@ -37,9 +37,13 @@ function requireLogin(): void
 /**
  * Devuelve el rol del usaurio actual 
  */
-function currentUserRol(): ?string
+function currentUserRole(): ?string
 {
-  return $_SESSION['USUARIO']['rol'] ?? null;
+    if (!isset($_SESSION['usuario']['rol'])) {
+        return null;
+    }
+
+    return strtolower(trim($_SESSION['usuario']['rol']));
 }
 /**
  * Comprueba si el usaurio actual tiene un rol concreto

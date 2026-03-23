@@ -48,9 +48,29 @@ function currentUserRole(): ?string
 /**
  * Comprueba si el usaurio actual tiene un rol concreto
  */
-function hasRole(string $rol):bool
+function hasRole(string $rol): bool
 {
-  return isLoggedIn() && currentUser() === $rol;
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $rol = strtolower(trim($rol));
+
+    // Primero intentamos validar por rol_id, que es más fiable
+    $rolId = $_SESSION['usuario']['rol_id'] ?? null;
+
+    $mapaRoles = [
+        'admin' => 1,
+        'tecnico' => 2,
+        'cliente' => 3
+    ];
+
+    if ($rolId !== null && isset($mapaRoles[$rol])) {
+        return (int)$rolId === $mapaRoles[$rol];
+    }
+
+    // Si no existe rol_id, validamos por nombre de rol
+    return currentUserRole() === $rol;
 }
 
 /**

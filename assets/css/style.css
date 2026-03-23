@@ -403,3 +403,41 @@ select option {
     text-align: center;
   }
 }
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tabla-incidencias {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  color: #f5f3ff;
+}
+
+.tabla-incidencias th,
+.tabla-incidencias td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tabla-incidencias th {
+  background: rgba(139, 92, 246, 0.16);
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.tabla-incidencias tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tabla-incidencias td a {
+  color: #c4b5fd;
+  font-weight: bold;
+}
+
+.tabla-incidencias td a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

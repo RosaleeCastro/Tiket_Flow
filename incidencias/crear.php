@@ -68,11 +68,11 @@ $success = $_GET['success'] ?? '';
                     <label for="categoria_id">Categoría</label>
                     <select id="categoria_id" name="categoria_id" required>
                         <option value="">Selecciona una categoría</option>
-                        <option value="1">Software</option>
-                        <option value="2">Hardware</option>
-                        <option value="3">Redes</option>
+                        <option value="1">Hardware</option>
+                        <option value="2">Software</option>
+                        <option value="3">Red</option>
                         <option value="4">Accesos</option>
-                        <option value="5">Otros</option>
+                        <option value="5">Impresoras</option>
                     </select>
                 </div>
 

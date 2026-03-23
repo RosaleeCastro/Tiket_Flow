@@ -55,13 +55,14 @@ if ($email === '' || $password === '') {
 | - también comprobamos si el usuario está activo
 */
 $sql = "SELECT 
-            u.id_usuario,
-            u.nombre,
-            u.apellidos,
-            u.email,
-            u.password,
-            u.activo,
-            r.nombre_rol
+         u.id_usuario,
+         u.nombre,
+         u.apellidos,
+         u.email,
+         u.password,
+         u.activo,
+         u.rol_id,
+         r.nombre_rol
         FROM usuarios u
         INNER JOIN roles r ON u.rol_id = r.id_rol
         WHERE u.email = ?
@@ -141,11 +142,12 @@ session_regenerate_id(true);
 | porque eso es lo que espera tu includes/auth.php
 */
 $_SESSION['usuario'] = [
-    'id'        => $usuario['id_usuario'],
-    'nombre'    => $usuario['nombre'],
-    'apellidos' => $usuario['apellidos'],
-    'email'     => $usuario['email'],
-    'rol'       => $usuario['nombre_rol']
+    'id'        => (int)$usuario['id_usuario'],
+    'nombre'    => trim($usuario['nombre']),
+    'apellidos' => trim($usuario['apellidos']),
+    'email'     => trim($usuario['email']),
+    'rol_id'    => (int)$usuario['rol_id'],
+    'rol'       => strtolower(trim($usuario['nombre_rol']))
 ];
 
 /*

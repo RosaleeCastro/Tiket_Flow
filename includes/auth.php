@@ -71,7 +71,7 @@ function requireRole(string $rol): void
 function requiereAnyRole(array $roles): void
 {
   requireLogin();
-  $rolActual = currentUserRol();
+  $rolActual = currentUserRole();
   if(!in_array($rolActual, $roles, true)){
     echo "Acceso denegado. No tienes permisos ´para entrar.";
     exit;

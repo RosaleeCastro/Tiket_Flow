@@ -68,21 +68,26 @@ $sql = "SELECT
         WHERE u.email = ?
         LIMIT 1";
 
-$stmt = $conn->prepare($sql);
+try {
+    $stmt = $conn->prepare($sql);
 
-// Si falla la preparación de la consulta, mostramos el error
-if (!$stmt) {
-    die('Error al preparar la consulta: ' . $conn->error);
+    if (!$stmt) {
+        header('Location: login.php?error=db');
+        exit;
+    }
+
+    // Asociamos el parámetro email
+    $stmt->bind_param('s', $email);
+
+    // Ejecutamos la consulta
+    $stmt->execute();
+
+    // Obtenemos el resultado
+    $resultado = $stmt->get_result();
+} catch (mysqli_sql_exception $e) {
+    header('Location: login.php?error=db');
+    exit;
 }
-
-// Asociamos el parámetro email
-$stmt->bind_param('s', $email);
-
-// Ejecutamos la consulta
-$stmt->execute();
-
-// Obtenemos el resultado
-$resultado = $stmt->get_result();
 
 /*
 |--------------------------------------------------------------------------
@@ -158,7 +163,6 @@ $_SESSION['usuario'] = [
 header('Location: ../dashboard/dashboard.php');
 exit;
 ?>
-
 
 
 

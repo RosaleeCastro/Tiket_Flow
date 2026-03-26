@@ -59,6 +59,12 @@ $error = $_GET['error'] ?? '';
          </div>
         <?php endif; ?>
 
+        <?php if ($error === 'db'): ?>
+            <div class="error-box">
+                La base de datos no tiene las tablas necesarias para iniciar sesión. Revisa la importación del esquema.
+            </div>
+        <?php endif; ?>
+
         <!--
             Formulario de inicio de sesión.
             Los datos se enviarán por POST a login_process.php

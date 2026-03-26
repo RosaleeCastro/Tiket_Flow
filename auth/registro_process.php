@@ -79,16 +79,22 @@ if ($password !== $confirmPassword) {
 |--------------------------------------------------------------------------
 */
 $sqlCheck = "SELECT id_usuario FROM usuarios WHERE email = ? LIMIT 1";
-$stmtCheck = $conn->prepare($sqlCheck);
 
-if (!$stmtCheck) {
+try {
+    $stmtCheck = $conn->prepare($sqlCheck);
+
+    if (!$stmtCheck) {
+        header('Location: registro.php?error=db');
+        exit;
+    }
+
+    $stmtCheck->bind_param('s', $email);
+    $stmtCheck->execute();
+    $resultCheck = $stmtCheck->get_result();
+} catch (mysqli_sql_exception $e) {
     header('Location: registro.php?error=db');
     exit;
 }
-
-$stmtCheck->bind_param('s', $email);
-$stmtCheck->execute();
-$resultCheck = $stmtCheck->get_result();
 
 if ($resultCheck->num_rows > 0) {
     $stmtCheck->close();
@@ -105,15 +111,20 @@ $stmtCheck->close();
 | No lo hardcodeamos para aprender una solución más robusta.
 */
 $sqlRol = "SELECT id_rol FROM roles WHERE nombre_rol = 'cliente' LIMIT 1";
-$resultRol = $conn->query($sqlRol);
+try {
+    $resultRol = $conn->query($sqlRol);
 
-if (!$resultRol || $resultRol->num_rows !== 1) {
+    if (!$resultRol || $resultRol->num_rows !== 1) {
+        header('Location: registro.php?error=db');
+        exit;
+    }
+
+    $rolCliente = $resultRol->fetch_assoc();
+    $rolId = (int)$rolCliente['id_rol'];
+} catch (mysqli_sql_exception $e) {
     header('Location: registro.php?error=db');
     exit;
 }
-
-$rolCliente = $resultRol->fetch_assoc();
-$rolId = (int)$rolCliente['id_rol'];
 
 /*
 |--------------------------------------------------------------------------
@@ -132,25 +143,30 @@ $sqlInsert = "INSERT INTO usuarios (
                 rol_id
               ) VALUES (?, ?, ?, ?, ?, 1, ?)";
 
-$stmtInsert = $conn->prepare($sqlInsert);
+try {
+    $stmtInsert = $conn->prepare($sqlInsert);
 
-if (!$stmtInsert) {
-    header('Location: registro.php?error=db');
-    exit;
-}
+    if (!$stmtInsert) {
+        header('Location: registro.php?error=db');
+        exit;
+    }
 
-$stmtInsert->bind_param(
-    'sssssi',
-    $nombre,
-    $apellidos,
-    $email,
-    $password,
-    $empresa,
-    $rolId
-);
+    $stmtInsert->bind_param(
+        'sssssi',
+        $nombre,
+        $apellidos,
+        $email,
+        $password,
+        $empresa,
+        $rolId
+    );
 
-if (!$stmtInsert->execute()) {
-    $stmtInsert->close();
+    if (!$stmtInsert->execute()) {
+        $stmtInsert->close();
+        header('Location: registro.php?error=db');
+        exit;
+    }
+} catch (mysqli_sql_exception $e) {
     header('Location: registro.php?error=db');
     exit;
 }

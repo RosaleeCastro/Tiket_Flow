@@ -132,25 +132,25 @@ if ($stmtComentarios) {
             <p>Informacion completa del ticket seleccionado.</p>
         </header>
 
-        <section class="dashboard-actions" style="margin-bottom: 20px;">
+        <section class="dashboard-actions actions-inline">
             <a href="mis_incidencias.php" class="btn-logout">Volver a mis incidencias</a>
         </section>
 
-        <section class="dashboard-card" style="margin-bottom: 20px;">
-            <h2 style="margin-top: 0;"><?php echo htmlspecialchars($incidencia['titulo']); ?></h2>
+        <section class="dashboard-card detail-card">
+            <h2><?php echo htmlspecialchars($incidencia['titulo']); ?></h2>
             <p><strong>Codigo:</strong> <?php echo htmlspecialchars($incidencia['codigo'] ?? 'Sin codigo'); ?></p>
             <p><strong>Categoria:</strong> <?php echo htmlspecialchars($incidencia['nombre_categoria']); ?></p>
             <p><strong>Estado:</strong> <?php echo htmlspecialchars($incidencia['nombre_estado']); ?></p>
             <p><strong>Prioridad:</strong> <?php echo htmlspecialchars($incidencia['nombre_prioridad']); ?></p>
             <p><strong>Tecnico asignado:</strong> <?php echo htmlspecialchars($incidencia['tecnico_asignado'] ?: 'Sin asignar'); ?></p>
             <p><strong>Fecha de creacion:</strong> <?php echo htmlspecialchars($incidencia['fecha_creacion']); ?></p>
-            <hr style="margin: 16px 0;">
+            <hr>
             <p><strong>Descripcion</strong></p>
             <p><?php echo nl2br(htmlspecialchars($incidencia['descripcion'])); ?></p>
         </section>
 
-        <section class="dashboard-card" style="margin-bottom: 20px;">
-            <h3 style="margin-top: 0;">Historial</h3>
+        <section class="dashboard-card detail-card">
+            <h3>Historial</h3>
             <?php if (!empty($historial)): ?>
                 <div class="table-responsive">
                     <table class="tabla-incidencias">
@@ -180,12 +180,12 @@ if ($stmtComentarios) {
         </section>
 
         <section class="dashboard-card">
-            <h3 style="margin-top: 0;">Comentarios</h3>
+            <h3>Comentarios</h3>
             <?php if (!empty($comentarios)): ?>
                 <?php foreach ($comentarios as $item): ?>
-                    <div style="border-bottom: 1px solid #e8e8e8; padding: 10px 0;">
-                        <p style="margin: 0 0 6px;"><strong><?php echo htmlspecialchars($item['usuario_nombre']); ?></strong></p>
-                        <p style="margin: 0 0 6px;"><?php echo nl2br(htmlspecialchars($item['comentario'])); ?></p>
+                    <div class="comment-item">
+                        <p><strong><?php echo htmlspecialchars($item['usuario_nombre']); ?></strong></p>
+                        <p><?php echo nl2br(htmlspecialchars($item['comentario'])); ?></p>
                         <small><?php echo htmlspecialchars($item['fecha_creacion']); ?></small>
                     </div>
                 <?php endforeach; ?>

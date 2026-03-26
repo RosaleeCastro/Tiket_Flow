@@ -79,11 +79,11 @@ $resultado = $stmt->get_result();
             <p>Aquí puedes ver todas las incidencias que has creado.</p>
         </header>
 
-        <section class="dashboard-actions" style="margin-bottom: 20px;">
-            <a href="crear.php" class="btn-login" style="display:inline-block; width:auto; padding:12px 20px;">
+        <section class="dashboard-actions actions-inline">
+            <a href="crear.php" class="btn-login">
                 Crear nueva incidencia
             </a>
-            <a href="../dashboard/dashboard.php" class="btn-logout" style="margin-left:10px;">
+            <a href="../dashboard/dashboard.php" class="btn-logout">
                 Volver al dashboard
             </a>
         </section>

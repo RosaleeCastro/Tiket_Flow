@@ -50,6 +50,7 @@ $rol = $usuario['rol'] ?? '';
             <h2>Opciones disponibles</h2>
 
             <!-- Opciones para ADMIN -->
+
             <?php if (isAdmin()): ?>
                 <div class="dashboard-card">
                     <h3>Administrador</h3>
@@ -73,6 +74,7 @@ $rol = $usuario['rol'] ?? '';
             <?php endif; ?>
 
             <!-- Opciones para CLIENTE -->
+             
             <?php if (isCliente()): ?>
                 <div class="dashboard-card">
                     <h3>Cliente</h3>

@@ -2,62 +2,62 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Solo puede entrar un cliente autenticado
-requireRole('cliente');
+requiereAnyRole(['cliente', 'tecnico']);
 
 if (!isset($conn) || !($conn instanceof mysqli)) {
     die('Error: la conexion $conn no esta disponible en config/database.php');
 }
 
-$usuario = currentUser();
-$clienteId = (int)($usuario['id'] ?? 0);
+$usuario      = currentUser();
+$usuarioId    = (int)($usuario['id'] ?? 0);
+$rol          = currentUserRole();
 $incidenciaId = (int)($_GET['id'] ?? 0);
 
-if ($clienteId <= 0) {
-    die('Error: no se pudo identificar al cliente autenticado.');
-}
-
-if ($incidenciaId <= 0) {
-    header('Location: mis_incidencias.php');
+if ($incidenciaId <= 0 || $usuarioId <= 0) {
+    header('Location: ' . ($rol === 'tecnico' ? 'mis_asignadas.php' : 'mis_incidencias.php'));
     exit;
 }
 
 /*
 |--------------------------------------------------------------------------
-| 1. Cargar detalle de la incidencia solo si pertenece al cliente
+| 1. Cargar detalle según rol
 |--------------------------------------------------------------------------
 */
-$sqlDetalle = "SELECT
-                  i.id_incidencia,
-                  i.codigo,
-                  i.titulo,
-                  i.descripcion,
-                  i.fecha_creacion,
-                  c.nombre_categoria,
-                  e.nombre_estado,
-                  p.nombre_prioridad,
-                  CONCAT(u.nombre, ' ', u.apellidos) AS tecnico_asignado
-               FROM incidencias i
-               INNER JOIN categorias c ON i.categoria_id = c.id_categoria
-               INNER JOIN estados e ON i.estado_id = e.id_estado
-               INNER JOIN prioridades p ON i.prioridad_id = p.id_prioridad
-               LEFT JOIN usuarios u ON i.tecnico_id = u.id_usuario
-               WHERE i.id_incidencia = ?
-                 AND i.cliente_id = ?
-               LIMIT 1";
+$sqlBase = "SELECT
+                i.id_incidencia,
+                i.codigo,
+                i.titulo,
+                i.descripcion,
+                i.fecha_creacion,
+                i.estado_id,
+                c.nombre_categoria,
+                e.nombre_estado,
+                p.nombre_prioridad,
+                CONCAT(u.nombre, ' ', u.apellidos) AS tecnico_asignado
+            FROM incidencias i
+            INNER JOIN categorias  c ON i.categoria_id = c.id_categoria
+            INNER JOIN estados     e ON i.estado_id    = e.id_estado
+            INNER JOIN prioridades p ON i.prioridad_id = p.id_prioridad
+            LEFT  JOIN usuarios    u ON i.tecnico_id   = u.id_usuario
+            WHERE i.id_incidencia = ?";
 
-$stmtDetalle = $conn->prepare($sqlDetalle);
-if (!$stmtDetalle) {
-    die('Error al preparar la consulta de detalle: ' . $conn->error);
+if ($rol === 'tecnico') {
+    $sqlBase .= " AND i.tecnico_id = ? LIMIT 1";
+} else {
+    $sqlBase .= " AND i.cliente_id = ? LIMIT 1";
 }
 
-$stmtDetalle->bind_param('ii', $incidenciaId, $clienteId);
+$stmtDetalle = $conn->prepare($sqlBase);
+if (!$stmtDetalle) {
+    die('Error al preparar la consulta: ' . $conn->error);
+}
+$stmtDetalle->bind_param('ii', $incidenciaId, $usuarioId);
 $stmtDetalle->execute();
 $resultDetalle = $stmtDetalle->get_result();
 
 if ($resultDetalle->num_rows !== 1) {
     $stmtDetalle->close();
-    header('Location: mis_incidencias.php');
+    header('Location: ' . ($rol === 'tecnico' ? 'mis_asignadas.php' : 'mis_incidencias.php'));
     exit;
 }
 
@@ -66,7 +66,25 @@ $stmtDetalle->close();
 
 /*
 |--------------------------------------------------------------------------
-| 2. Cargar historial de acciones de la incidencia
+| 2. Cargar estados disponibles (solo necesario para técnico)
+|--------------------------------------------------------------------------
+*/
+$estados = [];
+if ($rol === 'tecnico') {
+    $stmtEstados = $conn->prepare("SELECT id_estado, nombre_estado FROM estados ORDER BY id_estado ASC");
+    if ($stmtEstados) {
+        $stmtEstados->execute();
+        $resEstados = $stmtEstados->get_result();
+        while ($e = $resEstados->fetch_assoc()) {
+            $estados[] = $e;
+        }
+        $stmtEstados->close();
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| 3. Cargar historial
 |--------------------------------------------------------------------------
 */
 $historial = [];
@@ -84,8 +102,8 @@ $stmtHistorial = $conn->prepare($sqlHistorial);
 if ($stmtHistorial) {
     $stmtHistorial->bind_param('i', $incidenciaId);
     $stmtHistorial->execute();
-    $resultHistorial = $stmtHistorial->get_result();
-    while ($fila = $resultHistorial->fetch_assoc()) {
+    $resHistorial = $stmtHistorial->get_result();
+    while ($fila = $resHistorial->fetch_assoc()) {
         $historial[] = $fila;
     }
     $stmtHistorial->close();
@@ -93,7 +111,7 @@ if ($stmtHistorial) {
 
 /*
 |--------------------------------------------------------------------------
-| 3. Cargar comentarios de la incidencia
+| 4. Cargar comentarios
 |--------------------------------------------------------------------------
 */
 $comentarios = [];
@@ -110,12 +128,24 @@ $stmtComentarios = $conn->prepare($sqlComentarios);
 if ($stmtComentarios) {
     $stmtComentarios->bind_param('i', $incidenciaId);
     $stmtComentarios->execute();
-    $resultComentarios = $stmtComentarios->get_result();
-    while ($fila = $resultComentarios->fetch_assoc()) {
+    $resComentarios = $stmtComentarios->get_result();
+    while ($fila = $resComentarios->fetch_assoc()) {
         $comentarios[] = $fila;
     }
     $stmtComentarios->close();
 }
+
+$urlVolver  = $rol === 'tecnico' ? 'mis_asignadas.php' : 'mis_incidencias.php';
+$textoVolver = $rol === 'tecnico' ? 'Volver a mis asignadas' : 'Volver a mis incidencias';
+
+$msgOk    = isset($_GET['ok'])    ? 'Estado actualizado correctamente.' : null;
+$msgError = match ($_GET['error'] ?? '') {
+    'permiso' => 'No tienes permiso para modificar esta incidencia.',
+    'estado'  => 'El estado seleccionado no es valido.',
+    'datos'   => 'Datos incompletos. Intenta de nuevo.',
+    'bd'      => 'Error al guardar en la base de datos.',
+    default   => null,
+};
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -133,8 +163,16 @@ if ($stmtComentarios) {
         </header>
 
         <section class="dashboard-actions actions-inline">
-            <a href="mis_incidencias.php" class="btn-logout">Volver a mis incidencias</a>
+            <a href="<?php echo $urlVolver; ?>" class="btn-logout"><?php echo $textoVolver; ?></a>
         </section>
+
+        <?php if ($msgOk): ?>
+            <div class="success-box"><?php echo htmlspecialchars($msgOk); ?></div>
+        <?php endif; ?>
+
+        <?php if ($msgError): ?>
+            <div class="error-box"><?php echo htmlspecialchars($msgError); ?></div>
+        <?php endif; ?>
 
         <section class="dashboard-card detail-card">
             <h2><?php echo htmlspecialchars($incidencia['titulo']); ?></h2>
@@ -148,6 +186,29 @@ if ($stmtComentarios) {
             <p><strong>Descripcion</strong></p>
             <p><?php echo nl2br(htmlspecialchars($incidencia['descripcion'])); ?></p>
         </section>
+
+        <?php if ($rol === 'tecnico' && !empty($estados)): ?>
+        <section class="dashboard-card detail-card">
+            <h3>Cambiar estado</h3>
+            <form method="POST" action="actualizar.php" class="incident-form">
+                <input type="hidden" name="incidencia_id" value="<?php echo $incidencia['id_incidencia']; ?>">
+                <div class="form-group">
+                    <label for="estado_id">Nuevo estado</label>
+                    <select name="estado_id" id="estado_id">
+                        <?php foreach ($estados as $e): ?>
+                            <option
+                                value="<?php echo $e['id_estado']; ?>"
+                                <?php echo (int)$e['id_estado'] === (int)$incidencia['estado_id'] ? 'selected' : ''; ?>
+                            >
+                                <?php echo htmlspecialchars($e['nombre_estado']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn-login">Guardar estado</button>
+            </form>
+        </section>
+        <?php endif; ?>
 
         <section class="dashboard-card detail-card">
             <h3>Historial</h3>

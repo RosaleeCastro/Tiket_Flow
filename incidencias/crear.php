@@ -1,14 +1,20 @@
 <?php
-//cargamos la autenticacion
-
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 
-//Solo puede entrar un usuario con sesión iniciada y rol cliente 
 requireRole('cliente');
 
-//Recogemos posibles mensajes enviados por URL
 $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
+
+// Cargar categorías desde la BD
+$categorias = [];
+$resCat = $conn->query("SELECT id_categoria, nombre_categoria FROM categorias ORDER BY nombre_categoria ASC");
+if ($resCat) {
+    while ($cat = $resCat->fetch_assoc()) {
+        $categorias[] = $cat;
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -43,6 +49,7 @@ $success = $_GET['success'] ?? '';
                 <?php endif; ?>
 
                 <form action="guardar.php" method="POST" class="incident-form">
+                    <?php echo csrfField(); ?>
                     <div class="form-group">
                         <label for="titulo">Título</label>
                         <input class="titulo-incidencia"
@@ -69,11 +76,11 @@ $success = $_GET['success'] ?? '';
                         <label for="categoria_id">Categoría</label>
                         <select id="categoria_id" name="categoria_id" required>
                             <option value="">Selecciona una categoría</option>
-                            <option value="1">Hardware</option>
-                            <option value="2">Software</option>
-                            <option value="3">Red</option>
-                            <option value="4">Accesos</option>
-                            <option value="5">Impresoras</option>
+                            <?php foreach ($categorias as $cat): ?>
+                                <option value="<?php echo (int)$cat['id_categoria']; ?>">
+                                    <?php echo htmlspecialchars($cat['nombre_categoria']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 

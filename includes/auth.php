@@ -1,7 +1,7 @@
 <?php
 //Iniciar session solo si todavia no esta iniciada
-if(session_start()=== PHP_SESSION_NONE){
-  session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 /*
 * Comprobar si hay un usuario autenticado en sessión
@@ -81,7 +81,8 @@ function requireRole(string $rol): void
 {
   requireLogin();
   if(!hasRole($rol)){
-    echo "Acceso denegado. No tienes permisis para entrar";
+    http_response_code(403);
+    echo "Acceso denegado. No tienes permisos para acceder a esta página.";
     exit;
   }
 }
@@ -93,7 +94,8 @@ function requiereAnyRole(array $roles): void
   requireLogin();
   $rolActual = currentUserRole();
   if(!in_array($rolActual, $roles, true)){
-    echo "Acceso denegado. No tienes permisos ´para entrar.";
+    http_response_code(403);
+    echo "Acceso denegado. No tienes permisos para acceder a esta página.";
     exit;
   }
 }
@@ -118,5 +120,29 @@ function isTecnico(): bool
 function isCliente(): bool
 {
     return hasRole('cliente');
+}
+
+// ── CSRF ─────────────────────────────────────────────────────────────────────
+
+function csrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrfField(): string
+{
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrfToken()) . '">';
+}
+
+function verifyCsrf(): void
+{
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals(csrfToken(), $token)) {
+        http_response_code(403);
+        die('Token CSRF inválido. Vuelve atrás e inténtalo de nuevo.');
+    }
 }
 ?>

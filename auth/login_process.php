@@ -126,7 +126,7 @@ if ((int)$usuario['activo'] !== 1) {
 |
 | Más adelante cambiaremos esto a password_hash() y password_verify()
 */
-if ($password !== $usuario['password']) {
+if (!password_verify($password, $usuario['password'])) {
     header('Location: login.php?error=credenciales');
     exit;
 }

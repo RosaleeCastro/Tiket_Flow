@@ -151,12 +151,14 @@ try {
         exit;
     }
 
+    $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+
     $stmtInsert->bind_param(
         'sssssi',
         $nombre,
         $apellidos,
         $email,
-        $password,
+        $passwordHash,
         $empresa,
         $rolId
     );

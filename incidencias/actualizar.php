@@ -3,19 +3,22 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../historial/registrar_movimiento.php';
 
-requireRole('tecnico');
+requiereAnyRole(['tecnico', 'admin']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: mis_asignadas.php');
     exit;
 }
 
+verifyCsrf();
+
 $usuario      = currentUser();
-$tecnicoId    = (int)($usuario['id'] ?? 0);
+$usuarioId    = (int)($usuario['id'] ?? 0);
+$rol          = currentUserRole();
 $incidenciaId = (int)($_POST['incidencia_id'] ?? 0);
 $nuevoEstadoId = (int)($_POST['estado_id'] ?? 0);
 
-if ($incidenciaId <= 0 || $nuevoEstadoId <= 0 || $tecnicoId <= 0) {
+if ($incidenciaId <= 0 || $nuevoEstadoId <= 0 || $usuarioId <= 0) {
     header("Location: detalle.php?id={$incidenciaId}&error=datos");
     exit;
 }
@@ -33,11 +36,18 @@ if ($resultEstado->num_rows !== 1) {
 $estado = $resultEstado->fetch_assoc();
 $stmtEstado->close();
 
-// Verificar que la incidencia pertenece a este técnico
-$stmtCheck = $conn->prepare(
-    "SELECT id_incidencia, estado_id, codigo FROM incidencias WHERE id_incidencia = ? AND tecnico_id = ? LIMIT 1"
-);
-$stmtCheck->bind_param('ii', $incidenciaId, $tecnicoId);
+// Admin puede modificar cualquier incidencia; técnico solo las suyas
+if ($rol === 'admin') {
+    $stmtCheck = $conn->prepare(
+        "SELECT id_incidencia, estado_id, codigo FROM incidencias WHERE id_incidencia = ? LIMIT 1"
+    );
+    $stmtCheck->bind_param('i', $incidenciaId);
+} else {
+    $stmtCheck = $conn->prepare(
+        "SELECT id_incidencia, estado_id, codigo FROM incidencias WHERE id_incidencia = ? AND tecnico_id = ? LIMIT 1"
+    );
+    $stmtCheck->bind_param('ii', $incidenciaId, $usuarioId);
+}
 $stmtCheck->execute();
 $resultCheck = $stmtCheck->get_result();
 if ($resultCheck->num_rows !== 1) {
@@ -65,8 +75,9 @@ if (!$stmtUpdate->execute()) {
 $stmtUpdate->close();
 
 // Registrar en historial
-$descripcion = 'El técnico cambió el estado a "' . $estado['nombre_estado'] . '" en ' . $incidencia['codigo'] . '.';
-registrarMovimiento($conn, $incidenciaId, $tecnicoId, 'cambiar_estado', $descripcion);
+$actor = $rol === 'admin' ? 'El administrador' : 'El técnico';
+$descripcion = $actor . ' cambió el estado a "' . $estado['nombre_estado'] . '" en ' . $incidencia['codigo'] . '.';
+registrarMovimiento($conn, $incidenciaId, $usuarioId, 'cambiar_estado', $descripcion);
 
 header("Location: detalle.php?id={$incidenciaId}&ok=1");
 exit;

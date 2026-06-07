@@ -11,11 +11,12 @@ if (!isset($conn) || !($conn instanceof mysqli)) {
     die('Error: la conexión $conn no está disponible en config/database.php');
 }
 
-// Solo aceptamos peticiones POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: crear.php');
     exit;
 }
+
+verifyCsrf();
 
 // Recogemos y limpiamos los datos del formulario
 $titulo = trim($_POST['titulo'] ?? '');

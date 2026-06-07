@@ -21,11 +21,7 @@ $rol = $usuario['rol'] ?? '';
     <!-- Para adaptar mejor la vista en móviles -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/style.css">
-
     <title>Dashboard | Ticket Flow</title>
-
-    <!-- Tu archivo CSS externo -->
-    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="dashboard-page">
 

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-requiereAnyRole(['cliente', 'tecnico']);
+requiereAnyRole(['cliente', 'tecnico', 'admin']);
 
 if (!isset($conn) || !($conn instanceof mysqli)) {
     die('Error: la conexion $conn no esta disponible en config/database.php');
@@ -41,17 +41,22 @@ $sqlBase = "SELECT
             LEFT  JOIN usuarios    u ON i.tecnico_id   = u.id_usuario
             WHERE i.id_incidencia = ?";
 
-if ($rol === 'tecnico') {
+if ($rol === 'admin') {
+    $sqlBase .= " LIMIT 1";
+    $stmtDetalle = $conn->prepare($sqlBase);
+    if (!$stmtDetalle) { die('Error al preparar la consulta: ' . $conn->error); }
+    $stmtDetalle->bind_param('i', $incidenciaId);
+} elseif ($rol === 'tecnico') {
     $sqlBase .= " AND i.tecnico_id = ? LIMIT 1";
+    $stmtDetalle = $conn->prepare($sqlBase);
+    if (!$stmtDetalle) { die('Error al preparar la consulta: ' . $conn->error); }
+    $stmtDetalle->bind_param('ii', $incidenciaId, $usuarioId);
 } else {
     $sqlBase .= " AND i.cliente_id = ? LIMIT 1";
+    $stmtDetalle = $conn->prepare($sqlBase);
+    if (!$stmtDetalle) { die('Error al preparar la consulta: ' . $conn->error); }
+    $stmtDetalle->bind_param('ii', $incidenciaId, $usuarioId);
 }
-
-$stmtDetalle = $conn->prepare($sqlBase);
-if (!$stmtDetalle) {
-    die('Error al preparar la consulta: ' . $conn->error);
-}
-$stmtDetalle->bind_param('ii', $incidenciaId, $usuarioId);
 $stmtDetalle->execute();
 $resultDetalle = $stmtDetalle->get_result();
 
@@ -70,7 +75,7 @@ $stmtDetalle->close();
 |--------------------------------------------------------------------------
 */
 $estados = [];
-if ($rol === 'tecnico') {
+if (in_array($rol, ['tecnico', 'admin'], true)) {
     $stmtEstados = $conn->prepare("SELECT id_estado, nombre_estado FROM estados ORDER BY id_estado ASC");
     if ($stmtEstados) {
         $stmtEstados->execute();
@@ -135,8 +140,16 @@ if ($stmtComentarios) {
     $stmtComentarios->close();
 }
 
-$urlVolver  = $rol === 'tecnico' ? 'mis_asignadas.php' : 'mis_incidencias.php';
-$textoVolver = $rol === 'tecnico' ? 'Volver a mis asignadas' : 'Volver a mis incidencias';
+if ($rol === 'admin') {
+    $urlVolver   = 'listar.php';
+    $textoVolver = 'Volver al listado';
+} elseif ($rol === 'tecnico') {
+    $urlVolver   = 'mis_asignadas.php';
+    $textoVolver = 'Volver a mis asignadas';
+} else {
+    $urlVolver   = 'mis_incidencias.php';
+    $textoVolver = 'Volver a mis incidencias';
+}
 
 $msgOk    = isset($_GET['ok'])    ? 'Estado actualizado correctamente.' : null;
 $msgError = match ($_GET['error'] ?? '') {
@@ -187,10 +200,11 @@ $msgError = match ($_GET['error'] ?? '') {
             <p><?php echo nl2br(htmlspecialchars($incidencia['descripcion'])); ?></p>
         </section>
 
-        <?php if ($rol === 'tecnico' && !empty($estados)): ?>
+        <?php if (in_array($rol, ['tecnico', 'admin'], true) && !empty($estados)): ?>
         <section class="dashboard-card detail-card">
             <h3>Cambiar estado</h3>
             <form method="POST" action="actualizar.php" class="incident-form">
+                <?php echo csrfField(); ?>
                 <input type="hidden" name="incidencia_id" value="<?php echo $incidencia['id_incidencia']; ?>">
                 <div class="form-group">
                     <label for="estado_id">Nuevo estado</label>

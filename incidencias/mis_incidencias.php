@@ -10,7 +10,7 @@
   //Verificamos conexión
 
   if(!isset($conn) || !($conn instanceof mysqli)){
-    dir('Error: la conexión $conn no está disponible en config/database.php');
+    die('Error: la conexión $conn no está disponible en config/database.php');
 }
   
 //Obtenemos el usuario actual desde la sesion 
@@ -35,6 +35,19 @@ if($clienteId <= 0){
 | - técnico asignado (si existe)
 | - fecha de creación
 */
+$porPagina = 10;
+$paginaActual = max(1, (int)($_GET['pagina'] ?? 1));
+$offset = ($paginaActual - 1) * $porPagina;
+
+// Total de registros para calcular páginas
+$stmtTotal = $conn->prepare("SELECT COUNT(*) FROM incidencias WHERE cliente_id = ?");
+$stmtTotal->bind_param('i', $clienteId);
+$stmtTotal->execute();
+$stmtTotal->bind_result($totalRegistros);
+$stmtTotal->fetch();
+$stmtTotal->close();
+$totalPaginas = (int)ceil($totalRegistros / $porPagina);
+
 $sql = "SELECT
             i.id_incidencia,
             i.codigo,
@@ -50,15 +63,16 @@ $sql = "SELECT
         INNER JOIN prioridades p ON i.prioridad_id = p.id_prioridad
         LEFT JOIN usuarios u ON i.tecnico_id = u.id_usuario
         WHERE i.cliente_id = ?
-        ORDER BY i.fecha_creacion DESC";
+        ORDER BY i.fecha_creacion DESC
+        LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($sql);
 
-if(!$stmt){
-  die('Error al preparar la consulta: ' . $conn->error);
+if (!$stmt) {
+    die('Error al preparar la consulta: ' . $conn->error);
 }
 
-$stmt->bind_param('i', $clienteId);
+$stmt->bind_param('iii', $clienteId, $porPagina, $offset);
 $stmt->execute();
 $resultado = $stmt->get_result();
 
@@ -89,6 +103,7 @@ $resultado = $stmt->get_result();
         </section>
 
         <section class="dashboard-card">
+            <p class="total-registros">Total: <?php echo $totalRegistros; ?> incidencia<?php echo $totalRegistros !== 1 ? 's' : ''; ?></p>
             <?php if ($resultado->num_rows > 0): ?>
                 <div class="table-responsive">
                     <table class="tabla-incidencias">
@@ -128,6 +143,18 @@ $resultado = $stmt->get_result();
                 </div>
             <?php else: ?>
                 <p>No tienes incidencias registradas todavía.</p>
+            <?php endif; ?>
+
+            <?php if ($totalPaginas > 1): ?>
+                <nav class="paginacion">
+                    <?php if ($paginaActual > 1): ?>
+                        <a href="?pagina=<?php echo $paginaActual - 1; ?>" class="btn-pag">&laquo; Anterior</a>
+                    <?php endif; ?>
+                    <span>Página <?php echo $paginaActual; ?> de <?php echo $totalPaginas; ?></span>
+                    <?php if ($paginaActual < $totalPaginas): ?>
+                        <a href="?pagina=<?php echo $paginaActual + 1; ?>" class="btn-pag">Siguiente &raquo;</a>
+                    <?php endif; ?>
+                </nav>
             <?php endif; ?>
         </section>
     </div>
